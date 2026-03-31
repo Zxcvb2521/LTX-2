@@ -1,64 +1,64 @@
 # LTX-Core
 
-The foundational library for the LTX-2 Audio-Video generation model. This package contains the raw model definitions, component implementations, and loading logic used by `ltx-pipelines` and `ltx-trainer`.
+Базовая библиотека для модели поколения аудио-видео LTX-2. Этот пакет содержит определения необработанных моделей, реализации компонентов и логику загрузки, используемую `ltx-pipelines` and `ltx-trainer`.
 
 ## 📦 What's Inside?
 
-- **`components/`**: Modular diffusion components (Schedulers, Guiders, Noisers, Patchifiers) following standard protocols
-- **`conditioning/`**: Tools for preparing latent states and applying conditioning (image, video, keyframes)
-- **`guidance/`**: Perturbation system for fine-grained control over attention mechanisms
-- **`loader/`**: Utilities for loading weights from `.safetensors`, fusing LoRAs, and managing memory
-- **`model/`**: PyTorch implementations of the LTX-2 Transformer, Video VAE, Audio VAE, Vocoder and Upscaler
-- **`text_encoders/gemma`**: Gemma text encoder implementation with tokenizers, feature extractors, and separate encoders for audio-video and video-only generation
-- **`quantization/`**: FP8 quantization backends (FP8-TensorRT-LLM scaled MM, FP8 cast) for reduced memory footprint.
+- **`components/`**: Модульные диффузионные компоненты (планировщики, направляющие, шумоуловители, патчификаторы), соответствующие стандартным протоколам.
+- **`conditioning/`**: Инструменты для подготовки скрытых состояний и применения кондиционирования (изображение, видео, ключевые кадры)
+- **`guidance/`**: Система возмущений для детального контроля механизмов внимания
+- **`loader/`**: утилиты для загрузки весов из `.safetensors`, объединения LoRA и управления памятью.
+- **`model/`**: реализации PyTorch преобразователя LTX-2, Video VAE, Audio VAE, вокодера и апскейлера.
+- **`text_encoders/gemma`**: реализация кодировщика текста Gemma с токенизаторами, экстракторами функций и отдельными кодировщиками для генерации аудио-видео и только видео.
+- **`quantization/`**: серверы квантования FP8 (масштабируемый MM FP8-TensorRT-LLM, приведение FP8) для уменьшения объема памяти.
 
 ## 🚀 Quick Start
 
-`ltx-core` provides the building blocks (models, components, and utilities) needed to construct inference flows. For ready-made inference pipelines use [`ltx-pipelines`](../ltx-pipelines/) or [`ltx-trainer`](../ltx-trainer/) for training.
+`ltx-core`предоставляет строительные блоки (модели, компоненты и утилиты), необходимые для построения потоков вывода. Для готовых конвейеров вывода используйте [`ltx-pipelines`](../ltx-pipelines/) or [`ltx-trainer`](../ltx-trainer/) for training.
 
 ## 🔧 Installation
 
 ```bash
-# From the repository root
+# Из корня репозитория
 uv sync --frozen
 
-# Or install as a package
+# Или установить как пакет
 pip install -e packages/ltx-core
 ```
 
 ## Building Blocks Overview
 
-`ltx-core` provides modular components that can be combined to build custom inference flows:
+`ltx-core` предоставляет модульные компоненты, которые можно комбинировать для создания пользовательских потоков вывода:
 
 ### Core Models
 
-- **Transformer** ([`model/transformer/`](src/ltx_core/model/transformer/)): The asymmetric dual-stream LTX-2 transformer (14B-parameter video stream, 5B-parameter audio stream) with bidirectional cross-modal attention for joint audio-video processing. Expects inputs in [`Modality`](src/ltx_core/model/transformer/modality.py) format
-- **Video VAE** ([`model/video_vae/`](src/ltx_core/model/video_vae/)): Encodes/decodes video pixels to/from latent space with temporal and spatial compression
-- **Audio VAE** ([`model/audio_vae/`](src/ltx_core/model/audio_vae/)): Encodes/decodes audio spectrograms to/from latent space
-- **Vocoder** ([`model/audio_vae/`](src/ltx_core/model/audio_vae/)): Neural vocoder that converts mel spectrograms to audio waveforms
-- **Text Encoder** ([`text_encoders/`](src/ltx_core/text_encoders/)): Gemma 3-based multilingual encoder with multi-layer feature extraction and thinking tokens that produces separate embeddings for video and audio conditioning
-- **Spatial Upscaler** ([`model/upsampler/`](src/ltx_core/model/upsampler/)): Upsamples latent representations for higher-resolution generation
+- **Трансформер** ([`model/transformer/`](src/ltx_core/model/transformer/)): асимметричный двухпоточный преобразователь LTX-2 (видеопоток с 14B-параметрами, аудиопоток с 5B-параметрами) с двунаправленным кросс-модальным вниманием для совместной обработки аудио-видео. Ожидает ввода в формате [`Modality`](src/ltx_core/model/transformer/modality.py).
+- **Video VAE** ([`model/video_vae/`](src/ltx_core/model/video_vae/)): кодирует/декодирует видеопиксели в/из скрытого пространства с временным и пространственным сжатием.
+- **Audio VAE** ([`model/audio_vae/`](src/ltx_core/model/audio_vae/)): кодирует/декодирует аудиоспектрограммы в/из скрытого пространства.
+- **Вокодер** ([`model/audio_vae/`](src/ltx_core/model/audio_vae/)): нейронный вокодер, который преобразует мел-спектрограммы в звуковые сигналы.
+- **Текстовый кодер** ([`text_encoders/`](src/ltx_core/text_encoders/)): многоязычный кодер на основе Gemma 3 с многоуровневым извлечением функций и токенами мышления, который создает отдельные вложения для обработки видео и звука.
+- **Пространственный апскейлер** ([`model/upsampler/`](src/ltx_core/model/upsampler/)): повышает дискретизацию скрытых представлений для генерации с более высоким разрешением.
 
 ### Diffusion Components
 
-- **Schedulers** ([`components/schedulers.py`](src/ltx_core/components/schedulers.py)): Noise schedules (LTX2Scheduler, LinearQuadratic, Beta) that control the denoising process
-- **Guiders** ([`components/guiders.py`](src/ltx_core/components/guiders.py)): Guidance strategies (CFG, STG, APG) for controlling generation quality and adherence to prompts
-- **Noisers** ([`components/noisers.py`](src/ltx_core/components/noisers.py)): Add noise to latents according to the diffusion schedule
-- **Patchifiers** ([`components/patchifiers.py`](src/ltx_core/components/patchifiers.py)): Convert between spatial latents `[B, C, F, H, W]` and sequence format `[B, seq_len, dim]` for transformer processing
+- **Планировщики** ([`comComponents/schedulers.py`](src/ltx_core/comComponents/schedulers.py)): графики шума (LTX2Scheduler, LinearQuadratic, Beta), которые управляют процессом шумоподавления.
+- **Guiders** ([`comComponents/guiders.py`](src/ltx_core/comComponents/guiders.py)): стратегии руководства (CFG, STG, APG) для контроля качества генерации и соблюдения подсказок.
+- **Noisers** ([`comComponents/noisers.py`](src/ltx_core/comComponents/noisers.py)): добавьте шум к скрытым объектам в соответствии с графиком диффузии.
+- **Patchifiers** ([`comComponents/patchifiers.py`](src/ltx_core/comComponents/patchifiers.py)): преобразование между пространственными скрытыми данными `[B, C, F, H, W]` и форматом последовательности `[B, seq_len, dim]` для обработки преобразователя.
 
 ### Conditioning & Control
 
-- **Conditioning** ([`conditioning/`](src/ltx_core/conditioning/)): Tools for preparing and applying various conditioning types (image, video, keyframes)
-- **Guidance** ([`guidance/`](src/ltx_core/guidance/)): Perturbation system for fine-grained control over attention mechanisms (e.g., skipping specific attention layers)
+- **Кондиционирование** ([`conditioning/`](src/ltx_core/conditioning/)): инструменты для подготовки и применения различных типов кондиционирования (изображение, видео, ключевые кадры).
+- **Guidance** ([`guidance/`](src/ltx_core/guidance/)): система возмущений для детального контроля над механизмами внимания (например, пропуск определенных уровней внимания).
 
 ### Utilities
 
-- **Loader** ([`loader/`](src/ltx_core/loader/)): Model loading from `.safetensors`, LoRA fusion, weight remapping, and memory management
-- **Quantization** ([`quantization/`](src/ltx_core/quantization/)): FP8 quantization backends for reduced memory footprint and faster inference
+- **Loader** ([`loader/`](src/ltx_core/loader/)): загрузка модели из `.safetensors`, объединение LoRA, перераспределение веса и управление памятью.
+- **Quantization** ([`quantization/`](src/ltx_core/quantization/)): серверы квантования FP8 для уменьшения использования памяти и более быстрого вывода.
 
 ### Loader
 
-The `loader/` module provides `SingleGPUModelBuilder`, a frozen dataclass that loads a PyTorch model from `.safetensors` checkpoints and optionally fuses one or more LoRA adapters.
+ `loader/` модуль обеспечивает `SingleGPUModelBuilder`,замороженный класс данных, который загружает модель PyTorch из контрольных точек .safetensors и при необходимости объединяет один или несколько адаптеров LoRA.
 
 #### Basic usage
 
